@@ -1,0 +1,67 @@
+---
+title: "Causal Diagrams in R with ggdag: New tools for better DAGs"
+author: "Malcolm Barrett"
+format: kakashi-revealjs
+---
+
+```{r setup, include=FALSE}
+options(
+  tibble.max_extra_cols = 6, 
+  tibble.width = 60
+)
+```
+
+## Quarto
+
+```{r}
+# time_points <- list(c("a", "b", "c"), "d", c("e", "f", "g"), "z")
+# # as_tidy_dagitty.list(layout = "time_ordered")
+# # as_tidy_daitty.data.frame(..., saturate = TRUE)
+# # if TRUE -> df to time ordered list |> as_tidy_dagitty.list()
+# # Do I do this with coords already in time ordered coords?
+# # dag_saturate(use_existing_coords = FALSE) -> existing DAG to saturated
+# # time order into a list -> as_tidy_dagitty.list -> add back in attributes of dag and data frame
+# # dag_prune() -> c("from" = "to", to ~ from)
+#
+# # Function to create all pairwise combinations
+# pairwise_combinations <- function(vec1, vec2) {
+#   expand.grid(name = vec1, to = vec2)
+# }
+#
+# # Generate the DAG edges
+# dag_edges <- map(seq_len(length(time_points) - 1), ~ {
+#   current_elements <- unlist(time_points[seq_len(.x)])
+#   future_elements <- unlist(time_points[(.x + 1):length(time_points)])
+#   pairwise_combinations(current_elements, future_elements)
+# }) %>%
+#   bind_rows()
+#
+# # View the resulting data frame
+# print(dag_edges)
+#
+# dag_edges |>
+#   as_tidy_dagitty(layout = "time_ordered") |>
+#   ggdag()
+#
+# filter_dag <- function(...) {
+#   function(.x) filter(.x, ...)
+# }
+#
+# dag_edges |>
+#   as_tidy_dagitty(layout = "time_ordered") |>
+#   ggplot(aes_dag()) +
+#   geom_dag_edges_fan(
+#     data = filter_dag(name != "f"),
+#     spread = 4,
+#     edge_color = "grey90"
+#   ) +
+#   geom_dag_edges_fan(
+#     data = filter_dag(name == "f" | (name == "d" & to %in% c("f", "z"))),
+#     spread = 3.5,
+#     edge_width = 1,
+#     edge_color = "steelblue"
+#   ) +
+#   geom_dag(use_edges = FALSE) +
+#   theme_dag()
+```
+
