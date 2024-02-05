@@ -447,6 +447,14 @@ ggdag_conditional_independence(results) +
 
 *Better guidance on what to do next!*
 
+## New tools for better DAGs {background-color="#23373B"}
+
+:::{.nonincremental}
+1. Time-ordering
+2. Saturating and pruning
+3. Customization
+4. Robustness checks
+:::
 
 ## Thanks! {background-color="#23373B" .huge}
 
