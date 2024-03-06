@@ -1,0 +1,380 @@
+---
+title: "Causal Diagrams in R with ggdag: New tools for better DAGs"
+author: "Malcolm Barrett"
+format: kakashi-revealjs
+---
+
+```{r setup, include=FALSE}
+options(
+  tibble.max_extra_cols = 6, 
+  tibble.width = 60
+)
+```
+
+# *The story so far* {background-color="#23373B"}
+
+## {background-color="#23373B"}
+
+::: {.center}
+![](images/ggdag.png){width=500}
+:::
+
+## 
+
+```{r}
+#| include: false
+set.seed(12345)
+```
+
+
+```{r}
+#| message: false
+#| output-location: slide
+#| fig-width: 7
+library(ggdag)
+library(ggplot2)
+theme_set(theme_dag())
+
+dag <- dagify(
+  z ~ a + c + d + e + f,
+  d ~ a + b + c,
+  e ~ a + b + c,
+  f ~ a + b + c
+)
+
+ggdag(dag)
+```
+
+##
+
+```{r}
+#| message: false
+#| output-location: slide
+#| fig-width: 7.5
+#| code-line-numbers: "|4|6-8|9-16"
+library(ggplot2)
+
+dag %>%
+  node_drelationship("b", "z") %>%
+  ggplot(aes(x, y, xend = xend, yend = yend, color = d_relationship)) +
+  geom_dag_edges() + 
+  geom_dag_point() +
+  geom_dag_text(color = "white") +
+  theme_dag() + 
+  theme(legend.position = "bottom") + 
+  scale_color_manual(
+    name = NULL, 
+    limits = "d-connected", 
+    values = "steelblue", 
+    na.value = "grey80"
+  )
+``` 
+
+
+## Causal Inference in R: The Book
+
+</br>
+</br>
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+![](images/ch_5.png){style="transform: rotate(-15deg);"}
+:::
+
+::: {.column width="50%"}
+![](images/ch_6.png){style="transform: rotate(15deg);"}
+:::
+
+::::
+
+</br>
+
+::: {.center .huge}
+<https://www.r-causal.org/>
+:::
+
+
+## New tools for better DAGs {background-color="#23373B"}
+
+1. Time-ordering
+2. Saturating and pruning
+3. Robustness checks
+
+## Installing the dev version {background-color="#23373B"}
+
+![](images/ggdag.png){.absolute top=0 right=0 width=140}
+
+</br>
+
+</br>
+
+</br>
+
+</br>
+
+:::{.middle .large}
+```{r}
+#| eval: false
+# install.packages("remotes")
+remotes::install_github("r-causal/ggdag")
+```
+:::
+
+# Time-ordered DAGs {background-color="#23373B"} 
+
+## {background-color="#23373B" .center .middle}
+
+::: {.r-fit-text}
+**time** is one
+:::
+
+::: {.r-fit-text}
+of the essential assumptions of
+:::
+
+::: {.r-fit-text}
+causal inference
+:::
+
+## Feedback loops
+
+```{r}
+#| echo: false
+dagify(
+  a ~ b,
+  b ~ a
+) |>
+  ggdag(layout = "circle", edge_type = "arc")
+```
+
+## Feed*forward* 
+
+```{r}
+#| echo: false
+dagify(
+  a2 ~ a1 + b1,
+  b2 ~ a1 + b1,
+  a3 ~ a2 + b2,
+  b3 ~ a2 + b2,
+  a4 ~ a3 + b3,
+  b4 ~ a3 + b3,
+  coords = time_ordered_coords()
+) |>
+  ggdag()
+```
+
+
+
+## Time-ordering your DAGs
+
+```{r}
+#| message: false
+#| code-line-numbers: "|7"
+#| output-location: slide
+library(ggdag)
+dag <- dagify(
+  z ~ a + c + d + e + f,
+  d ~ a + b + c,
+  e ~ a + b + c,
+  f ~ a + b + c,
+  coords = time_ordered_coords()
+)
+
+ggdag(dag)
+```
+
+## Work in progress {.huge}
+
+. . .
+
+*Improving time-ordered layouts*
+
+. . . 
+
+*Making it the default layout*
+
+# Saturating and pruning DAGs {background-color="#23373B"}
+
+## {background-color="#23373B" .center .middle}
+
+::: {.r-fit-text}
+taking an arrow out is a 
+:::
+
+::: {.r-fit-text}
+**bigger assumption**
+:::
+
+::: {.r-fit-text}
+than adding an arrow in
+:::
+
+## Create a saturated DAG
+
+```{r}
+time_points <- list(
+  # time point 1
+  c("a", "b", "c"),
+  # time point 2
+  "d", 
+  # time point 3
+  c("e", "f", "g"), 
+  # time point 4
+  "z"
+)
+```
+## Create a saturated DAG
+
+```{r}
+#| output-location: slide
+time_points |> 
+  as_tidy_dagitty() |> 
+  ggdag()
+```
+
+## Prune the edges
+
+```{r}
+#| code-line-numbers: "|3|4-8"
+#| output-location: slide
+time_points |> 
+  as_tidy_dagitty() |> 
+  dag_prune(c(
+    "b" = "f",
+    "b" = "z",
+    "c" = "e",
+    "a" = "g",
+    "d" = "z"
+  )) |> 
+  ggdag()
+```
+
+
+## Work in progress {.huge}
+
+*API is still in early stages*
+
+# Robustness checks {background-color="#23373B"}
+
+## {background-color="#23373B" .center .middle}
+
+::: {.r-fit-text}
+there is **no**
+:::
+
+::: {.r-fit-text}
+one true DAG
+:::
+
+## Implications of your DAG
+
+```{r}
+ggdag(dag)
+```
+
+## Implications of your DAG
+
+```{r}
+#| output-location: slide
+ggdag_adjustment_set(dag, exposure = "f", outcome = "z") +
+  theme(legend.position = "none")
+```
+
+## Implied conditional independence
+
+```{r}
+dag |> 
+  pull_dag() |> 
+  dagitty::impliedConditionalIndependencies()
+```
+
+## Implied conditional independence
+
+```{r}
+dag |> 
+  query_conditional_independence()
+```
+
+## {.center .middle}
+
+![](images/data_generating_mechanism.png)
+
+:::{.small}
+@eikofried.bsky.social
+:::
+
+## Testing implications
+
+```{r}
+#| code-line-numbers: "|1|2-4"
+#| output-location: fragment
+dag_data <- simulate_data(dag)
+results <- dag |> 
+  test_conditional_independence(dag_data)
+results
+```
+
+## Testing implications
+
+```{r}
+ggdag_conditional_independence(results) +
+  theme_minimal(14)
+```
+
+## Testing implications
+
+## Testing implications
+
+```{r}
+#| output-location: slide
+#| code-line-numbers: "|1-3|5-12"
+dag_data <- dag |> 
+  dag_saturate() |> 
+  simulate_data()
+
+results <- dag |> 
+  tidy_dagitty() |> 
+  dag_prune(c(
+    "a" = "d",
+    "b" = "d",
+    "e" = "z"
+  )) |> 
+  test_conditional_independence(dag_data)
+
+ggdag_conditional_independence(results) +
+  theme_minimal(14)
+```
+
+## Work in progress {.huge}
+ 
+. . .
+
+*A query API for all DAG queries*
+
+. . .
+
+*Better support for joint adjustment sets*
+
+. . .
+
+*Better guidance on what to do next!*
+
+## New tools for better DAGs {background-color="#23373B"}
+
+:::{.nonincremental}
+1. Time-ordering
+2. Saturating and pruning
+3. Robustness checks
+:::
+
+## Thanks! {background-color="#23373B" .huge}
+
+:::{.nonincremental}
+R Consortium 
+
+Lucy D'Agostino McGowan & Travis Gerke
+
+Peter Tenant
+:::
